@@ -1,0 +1,104 @@
+@import "tailwindcss";
+
+/* ─── Color Palette (WCAG AAA Compliant) ─── */
+:root {
+  /* Provided palette */
+  --citrine-white: #FAEDD9;
+  --waikawa-gray: #5C799D;
+  --danube: #6695C6;
+  --spindle: #AFCBE6;
+  --calypso: #306289;
+
+  /* Derived for AAA compliance (7:1 contrast) */
+  --ink: #1A3048;        /* Primary text on light bg — ~10.4:1 on Citrine White */
+  --cream: #FAEDD9;      /* Primary text on dark bg — same ratio reversed */
+
+  /* Functional tokens */
+  --background: var(--citrine-white);
+  --foreground: var(--ink);
+  --surface-dark: var(--ink);
+  --surface-accent: var(--calypso);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  /* Palette */
+  --color-citrine: #FAEDD9;
+  --color-waikawa: #5C799D;
+  --color-danube: #6695C6;
+  --color-spindle: #AFCBE6;
+  --color-calypso: #306289;
+  --color-ink: #1A3048;
+
+  /* Fonts */
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-bebas-neue);
+}
+
+/* ─── Base Styles ─── */
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  overflow-x: hidden;
+}
+
+/* ─── Selection ─── */
+::selection {
+  background: var(--calypso);
+  color: var(--citrine-white);
+}
+
+/* ─── Smooth scroll override for Lenis ─── */
+html.lenis, html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+/* ─── Skip Link (A11y) ─── */
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: 16px;
+  z-index: 9999;
+  padding: 12px 24px;
+  background: var(--ink);
+  color: var(--citrine-white);
+  font-weight: 700;
+  text-decoration: none;
+  border-radius: 0 0 4px 4px;
+}
+
+.skip-link:focus {
+  top: 0;
+}
+
+/* ─── Focus Ring (A11y) ─── */
+:focus-visible {
+  outline: 3px solid var(--danube);
+  outline-offset: 2px;
+}
+
+/* ─── Reduced Motion ─── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
