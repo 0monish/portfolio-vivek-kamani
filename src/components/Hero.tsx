@@ -1,17 +1,51 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import Image from "next/image";
 import { gsap, ScrollTrigger, useGSAP } from "@/lib/gsap";
 import { useMotion } from "@/providers/MotionProvider";
 
 export default function Hero() {
   const sectionRef = useRef<HTMLElement>(null);
-  const nameRef = useRef<HTMLHeadingElement>(null);
-  const headlineRef = useRef<HTMLHeadingElement>(null);
+  const leftHeadlineRef = useRef<HTMLHeadingElement>(null);
+  const rightHeadlineRef = useRef<HTMLHeadingElement>(null);
+  const subtextRef = useRef<HTMLDivElement>(null);
   const iPhoneRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
+  const ctaRef = useRef<HTMLAnchorElement>(null);
+  const bottomTextRef = useRef<HTMLDivElement>(null);
   const { reducedMotion } = useMotion();
+  
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+
+  // Mouse parallax effect
+  useEffect(() => {
+    if (reducedMotion) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const x = (e.clientX / window.innerWidth - 0.5) * 2;
+      const y = (e.clientY / window.innerHeight - 0.5) * 2;
+      setMousePos({ x, y });
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, [reducedMotion]);
+
+  // Apply parallax transform to phone
+  useEffect(() => {
+    if (reducedMotion || !iPhoneRef.current) return;
+
+    const rotateY = mousePos.x * 15; // tilt left-right
+    const rotateX = -mousePos.y * 15; // tilt top-bottom
+
+    gsap.to(iPhoneRef.current, {
+      rotateY,
+      rotateX,
+      duration: 0.5,
+      ease: "power2.out",
+    });
+  }, [mousePos, reducedMotion]);
 
   useGSAP(
     () => {
@@ -28,40 +62,28 @@ export default function Hero() {
         });
       }
 
-      // Name fade in
-      if (nameRef.current) {
-        gsap.from(nameRef.current, {
+      // Headlines fade in and slide
+      const headlines = [leftHeadlineRef.current, rightHeadlineRef.current];
+      if (headlines[0] && headlines[1]) {
+        gsap.from(headlines, {
           opacity: 0,
-          y: -30,
-          duration: 0.8,
+          y: 50,
+          duration: 1,
+          stagger: 0.2,
           ease: "power3.out",
-          delay: 0.5,
+          delay: 0.8,
         });
       }
 
-      // Headline character scrubber
-      if (headlineRef.current) {
-        const headline = headlineRef.current;
-        const text = headline.textContent || "";
-        headline.innerHTML = "";
-        headline.setAttribute("aria-label", text);
-
-        const chars = text.split("").map((char) => {
-          const span = document.createElement("span");
-          span.textContent = char === " " ? "\u00A0" : char;
-          span.style.opacity = "0";
-          span.style.display = "inline-block";
-          span.setAttribute("aria-hidden", "true");
-          headline.appendChild(span);
-          return span;
-        });
-
-        gsap.to(chars, {
-          opacity: 1,
-          duration: 0.03,
-          stagger: 0.05,
-          ease: "none",
-          delay: 0.9,
+      // Subtext fade in
+      if (subtextRef.current) {
+        gsap.from(subtextRef.current.children, {
+          opacity: 0,
+          x: -20,
+          duration: 0.8,
+          stagger: 0.1,
+          ease: "power2.out",
+          delay: 1.2,
         });
       }
 
@@ -70,35 +92,68 @@ export default function Hero() {
         gsap.from(iPhoneRef.current, {
           scale: 0.85,
           opacity: 0,
-          duration: 1,
+          duration: 1.2,
           ease: "power3.out",
-          delay: 1.5,
+          delay: 0.5, // Starts earlier to be the anchor
         });
       }
 
-      // ScrollTrigger: fade out on scroll
+      // CTA and Bottom Text
+       if (ctaRef.current) {
+        gsap.from(ctaRef.current, {
+            opacity: 0,
+            y: 20,
+            duration: 0.8,
+            ease: "power2.out",
+            delay: 1.5
+        })
+       }
+       if (bottomTextRef.current) {
+         gsap.from(bottomTextRef.current, {
+             opacity: 0,
+             x: 20,
+             duration: 0.8,
+             ease: "power2.out",
+             delay: 1.6
+         })
+       }
+
+
+      // ScrollTrigger: Parallax/Fade out
       if (sectionRef.current) {
         ScrollTrigger.create({
           trigger: sectionRef.current,
           start: "top top",
           end: "bottom top",
+          scrub: true,
           onLeave: () => {
-            gsap.to(sectionRef.current, {
-              opacity: 0,
-              scale: 0.97,
-              duration: 0.4,
-              ease: "power2.in",
-            });
-          },
-          onEnterBack: () => {
-            gsap.to(sectionRef.current, {
-              opacity: 1,
-              scale: 1,
-              duration: 0.4,
-              ease: "power2.out",
-            });
-          },
+             // Optional exit animation
+          }
         });
+        
+        // Parallax for text vs phone
+        if(iPhoneRef.current && leftHeadlineRef.current && rightHeadlineRef.current) {
+             gsap.to(iPhoneRef.current, {
+                 yPercent: 20,
+                 ease: "none",
+                 scrollTrigger: {
+                     trigger: sectionRef.current,
+                     start: "top top",
+                     end: "bottom top",
+                     scrub: true
+                 }
+             });
+             gsap.to([leftHeadlineRef.current, rightHeadlineRef.current], {
+                 yPercent: -10,
+                 ease: "none",
+                 scrollTrigger: {
+                     trigger: sectionRef.current,
+                     start: "top top",
+                     end: "bottom top",
+                     scrub: true
+                 }
+             });
+        }
       }
     },
     { scope: sectionRef, dependencies: [reducedMotion] },
@@ -109,7 +164,7 @@ export default function Hero() {
       ref={sectionRef}
       id="hero"
       aria-label="Hero — Vivek Kamani Video Editor"
-      className="relative flex min-h-svh flex-col items-center justify-center overflow-hidden bg-ink"
+      className="relative flex min-h-svh w-full flex-col items-center justify-center overflow-hidden bg-ink"
       style={{
         backgroundImage: `url('/hero-bg.jpeg')`,
         backgroundSize: "cover",
@@ -126,87 +181,118 @@ export default function Hero() {
       {/* Hard-cut overlay */}
       <div
         ref={overlayRef}
-        className="absolute inset-0 z-10 bg-ink"
+        className="absolute inset-0 z-50 bg-ink"
         aria-hidden="true"
       />
 
-      {/* Name Tag — Top Absolute */}
-      <div className="absolute top-16 left-1/2 z-30 flex -translate-x-1/2 flex-col items-center gap-2 sm:top-20 md:top-24 md:gap-3">
-        <h2
-          ref={nameRef}
-          className="font-display text-base font-bold uppercase tracking-[0.3em] text-citrine/70 sm:text-lg md:text-xl lg:text-2xl"
-        >
-          Vivek Kamani
-        </h2>
-        <div className="h-px w-12 bg-calypso sm:w-16" aria-hidden="true" />
+      {/* Main Grid/Flex Layout matching Reference */}
+      <div className="relative z-20 flex h-full w-full max-w-[1920px] flex-col justify-between px-6 pt-24 pb-12 md:flex-row md:items-center md:px-12 lg:px-20 xl:px-32">
+        
+        {/* LEFT COMPONENT */}
+        <div className="flex flex-col items-start gap-6 text-left md:w-2/5 xl:w-1/3">
+            <h1 
+              ref={leftHeadlineRef}
+              className="font-display text-5xl font-black uppercase leading-[0.9] tracking-wide text-citrine sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl"
+            >
+              STORIES<br />THAT
+            </h1>
+            
+            <div ref={subtextRef} className="flex flex-col gap-4 pl-1">
+                <h3 className="text-xl font-medium text-citrine sm:text-2xl">
+                    Your Content, Amplified
+                </h3>
+                <div className="h-px w-16 bg-citrine/60" aria-hidden="true" />
+                <p className="max-w-xs text-sm font-light leading-relaxed text-citrine/80 sm:text-base">
+                    Every second is optimized for retention and impact, giving you the freedom to focus on creation while I handle the craft.
+                </p>
+            </div>
+        </div>
+
+        {/* RIGHT COMPONENT */}
+        <div className="mt-8 flex flex-col items-end text-right md:mt-0 md:w-2/5 xl:w-1/3">
+             <h1 
+                ref={rightHeadlineRef}
+                className="font-display text-5xl font-black uppercase leading-[0.9] tracking-wide text-citrine sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl"
+             >
+                CONVERT<br />& SELL
+             </h1>
+        </div>
+
       </div>
 
-      {/* iPhone Mockup — Absolute Center */}
+      {/* PHONE - ABSOLUTE CENTER */}
+      {/* Positioned absolutely to sit in the center regardless of flex columns, z-index managed to be effectively 'behind' or 'interacted' with text visually if needed, but per reference it's the focal point */}
       <div
         ref={iPhoneRef}
-        className="absolute top-1/2 left-1/2 z-20 w-[min(80vw,280px)] -translate-x-1/2 -translate-y-1/2 sm:w-[min(60vw,320px)] md:w-80 lg:w-85 xl:w-90 2xl:w-95"
+        className="absolute top-1/2 left-1/2 z-10 w-[min(35vw,160px)] -translate-x-1/2 -translate-y-1/2 sm:w-[min(30vw,190px)] md:w-[220px] lg:w-[260px] xl:w-[300px]"
+        style={{
+          perspective: "1000px",
+          transformStyle: "preserve-3d",
+        }}
       >
-        <div className="relative aspect-9/16">
+        <div 
+          className="relative aspect-9/16"
+          style={{
+            transformStyle: "preserve-3d",
+            filter: "drop-shadow(0 30px 60px rgba(0, 0, 0, 0.5)) drop-shadow(0 15px 30px rgba(0, 0, 0, 0.4)) drop-shadow(0 5px 15px rgba(0, 0, 0, 0.3))",
+          }}
+        >
           <Image
             src="/iPhone.svg"
             alt="iPhone mockup showcasing video editing work"
             fill
-            className="object-contain drop-shadow-2xl"
+            className="object-contain"
             priority
           />
+           {/* Center Text on Phone/Window Effect */}
+           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center whitespace-nowrap opacity-90 mix-blend-overlay">
+              <span className="font-display text-xl uppercase tracking-widest text-white/50">Vivek Kamani</span>
+           </div>
         </div>
         
-        {/* Glow effect around iPhone */}
+        {/* Glow effect */}
         <div
           className="absolute inset-0 -z-10 blur-3xl"
           style={{
-            background: "radial-gradient(circle, rgba(111, 203, 230, 0.2) 0%, transparent 70%)",
+            background: "radial-gradient(circle, rgba(250, 237, 217, 0.15) 0%, transparent 70%)",
           }}
           aria-hidden="true"
         />
       </div>
 
-      {/* Main Headline — Bottom Absolute */}
-      <div className="absolute bottom-24 left-1/2 z-30 w-full max-w-5xl -translate-x-1/2 px-4 sm:bottom-28 sm:px-6 md:bottom-32 lg:bottom-36">
-        <h1
-          ref={headlineRef}
-          className="text-center font-display text-2xl font-black uppercase leading-[0.95] tracking-tight text-citrine sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl 2xl:text-7xl"
-        >
-          VIDEO EDITOR WHO CRAFTS STORIES THAT SELL
-        </h1>
-      </div>
-
-      {/* CTA Button — Bottom */}
-      <a
+       {/* BOTTOM ELEMENTS */}
+      
+      {/* Reference: CTA Button Bottom Center */}
+       <a
+        ref={ctaRef}
         href="#contact"
-        className="absolute bottom-12 left-1/2 z-30 flex h-12 -translate-x-1/2 items-center gap-2 rounded-full border-2 border-citrine px-6 text-xs font-bold uppercase tracking-[0.2em] text-citrine transition-all hover:scale-105 hover:bg-citrine hover:text-ink focus-visible:bg-citrine focus-visible:text-ink sm:bottom-14 sm:h-14 sm:gap-3 sm:px-8 sm:text-sm md:bottom-16 lg:px-10"
+        className="absolute bottom-12 left-1/2 z-40 flex -translate-x-1/2 items-center gap-3 rounded-full bg-citrine px-8 py-3 text-sm font-bold uppercase tracking-widest text-ink transition-all hover:scale-105 hover:bg-white sm:bottom-16 md:bottom-20"
       >
-        Let's Talk
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden="true"
-        >
-          <line x1="5" y1="12" x2="19" y2="12" />
-          <polyline points="12 5 19 12 12 19" />
+        Start Your Project
+        <svg  width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="12 5 19 12 12 19" />
         </svg>
       </a>
 
-      {/* Scroll indicator */}
-      <div
-        className="absolute bottom-4 left-1/2 z-20 -translate-x-1/2 sm:bottom-6 md:bottom-8"
-        aria-hidden="true"
+      {/* Reference: Bottom Right Text */}
+      <div 
+        ref={bottomTextRef}
+        className="absolute bottom-8 right-8 z-30 hidden flex-col items-end gap-1 md:flex lg:right-16 lg:bottom-12"
       >
-        <div className="flex h-8 w-5 items-start justify-center rounded-full border-2 border-citrine/40 pt-1.5 sm:h-10 sm:w-6 sm:pt-2">
-          <div className="h-1.5 w-0.5 animate-bounce rounded-full bg-citrine sm:h-2 sm:w-1" />
-        </div>
+          <span className="text-xs font-bold uppercase tracking-widest text-citrine">Ready to scale?</span>
       </div>
+
+       {/* Reference: Scroll Indicator Bottom Left */}
+       <div className="absolute bottom-8 left-8 z-30 hidden flex-col items-start gap-1 md:flex lg:left-16 lg:bottom-12">
+            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-citrine">
+                <div className="flex flex-col gap-1">
+                    <span className="h-1.5 w-1.5 rounded-full bg-citrine/50 animate-pulse"></span>
+                    <span className="h-1.5 w-1.5 rounded-full bg-citrine animate-pulse delay-75"></span>
+                </div>
+                Scroll Down
+            </div>
+       </div>
+
     </section>
   );
 }
