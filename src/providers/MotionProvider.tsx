@@ -1,7 +1,8 @@
-"use client";
+'use client';
 
-import { createContext, useContext, type ReactNode } from "react";
-import { useReducedMotion } from "@/hooks/useReducedMotion";
+import { createContext, type ReactNode, useContext } from 'react';
+
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 interface MotionContextValue {
   reducedMotion: boolean;

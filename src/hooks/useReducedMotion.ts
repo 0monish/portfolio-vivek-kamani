@@ -1,33 +1,34 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useCallback } from "react";
+import { useCallback, useEffect, useState } from 'react';
 
 /**
  * Detects user's prefers-reduced-motion setting AND provides a global toggle.
  * Returns { reducedMotion, toggleMotion } for AAA compliance.
  */
 export function useReducedMotion() {
-  const [reducedMotion, setReducedMotion] = useState(false);
+  const [systemReducedMotion, setSystemReducedMotion] = useState(
+    () =>
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  );
   const [userOverride, setUserOverride] = useState<boolean | null>(null);
 
   useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setReducedMotion(mq.matches);
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
 
     const handler = (e: MediaQueryListEvent) => {
-      if (userOverride === null) setReducedMotion(e.matches);
+      setSystemReducedMotion(e.matches);
     };
-    mq.addEventListener("change", handler);
-    return () => mq.removeEventListener("change", handler);
-  }, [userOverride]);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+
+  const reducedMotion = userOverride ?? systemReducedMotion;
 
   const toggleMotion = useCallback(() => {
-    setUserOverride((prev) => {
-      const next = prev === null ? !reducedMotion : !prev;
-      setReducedMotion(!next);
-      return next;
-    });
-  }, [reducedMotion]);
+    setUserOverride((prev) => (prev === null ? !systemReducedMotion : !prev));
+  }, [systemReducedMotion]);
 
   return { reducedMotion, toggleMotion };
 }

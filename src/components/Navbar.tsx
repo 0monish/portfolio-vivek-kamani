@@ -1,8 +1,9 @@
-"use client";
+'use client';
 
-import { useRef } from "react";
-import { gsap, useGSAP } from "@/lib/gsap";
-import { useMotion } from "@/providers/MotionProvider";
+import { useRef } from 'react';
+
+import { gsap, useGSAP } from '@/lib/gsap';
+import { useMotion } from '@/providers/MotionProvider';
 
 export default function Navbar() {
   const navRef = useRef<HTMLElement>(null);
@@ -16,11 +17,11 @@ export default function Navbar() {
         y: -100,
         opacity: 0,
         duration: 0.8,
-        ease: "power3.out",
+        ease: 'power3.out',
         delay: 0.2,
       });
     },
-    { scope: navRef, dependencies: [reducedMotion] },
+    { scope: navRef, dependencies: [reducedMotion] }
   );
 
   return (
@@ -32,7 +33,7 @@ export default function Navbar() {
     >
       <a
         href="#hero"
-        className="font-display text-2xl font-bold tracking-tight text-ink"
+        className="font-display text-ink text-2xl font-bold tracking-tight"
         aria-label="Go to top"
       >
         VK<span className="text-calypso">.</span>
@@ -41,14 +42,14 @@ export default function Navbar() {
       <div className="flex items-center gap-6">
         <ul className="hidden items-center gap-8 md:flex" role="list">
           {[
-            { label: "Work", href: "#work" },
-            { label: "About", href: "#metrics" },
-            { label: "Contact", href: "#contact" },
+            { label: 'Work', href: '#work' },
+            { label: 'About', href: '#metrics' },
+            { label: 'Contact', href: '#contact' },
           ].map((link) => (
             <li key={link.href}>
               <a
                 href={link.href}
-                className="text-sm font-semibold uppercase tracking-[0.2em] text-ink transition-colors hover:text-calypso focus-visible:text-calypso"
+                className="text-ink hover:text-calypso focus-visible:text-calypso text-sm font-semibold tracking-[0.2em] uppercase transition-colors"
               >
                 {link.label}
               </a>
@@ -59,10 +60,8 @@ export default function Navbar() {
         {/* Motion Toggle — AAA A11y Compliance */}
         <button
           onClick={toggleMotion}
-          aria-label={
-            reducedMotion ? "Enable animations" : "Reduce motion"
-          }
-          className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-ink text-ink transition-colors hover:bg-ink hover:text-citrine focus-visible:bg-ink focus-visible:text-citrine"
+          aria-label={reducedMotion ? 'Enable animations' : 'Reduce motion'}
+          className="border-ink text-ink hover:bg-ink hover:text-citrine focus-visible:bg-ink focus-visible:text-citrine flex h-10 w-10 items-center justify-center rounded-full border-2 transition-colors"
           type="button"
         >
           {reducedMotion ? (

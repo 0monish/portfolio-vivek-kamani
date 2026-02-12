@@ -1,9 +1,10 @@
-"use client";
+'use client';
 
-import { useEffect, useRef, type ReactNode } from "react";
-import Lenis from "lenis";
-import { ScrollTrigger } from "@/lib/gsap";
-import { useMotion } from "./MotionProvider";
+import { type ReactNode, useEffect, useRef } from 'react';
+import Lenis from 'lenis';
+
+import { ScrollTrigger } from '@/lib/gsap';
+import { useMotion } from '@/providers/MotionProvider';
 
 export function SmoothScrollProvider({ children }: { children: ReactNode }) {
   const lenisRef = useRef<Lenis | null>(null);
@@ -28,7 +29,7 @@ export function SmoothScrollProvider({ children }: { children: ReactNode }) {
     lenisRef.current = lenis;
 
     // Sync Lenis with GSAP ScrollTrigger
-    lenis.on("scroll", ScrollTrigger.update);
+    lenis.on('scroll', ScrollTrigger.update);
 
     const raf = (time: number) => {
       lenis.raf(time);

@@ -1,34 +1,35 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono, Bebas_Neue } from "next/font/google";
-import "./globals.css";
+import '@/app/globals.css';
+
+import type { Metadata } from 'next';
+import { Bebas_Neue, Geist, Geist_Mono } from 'next/font/google';
 
 const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+  variable: '--font-geist-sans',
+  subsets: ['latin'],
 });
 
 const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  variable: '--font-geist-mono',
+  subsets: ['latin'],
 });
 
 /* Bebas Neue — Neo-Grotesque display font for headlines */
 const bebasNeue = Bebas_Neue({
-  weight: "400",
-  variable: "--font-bebas-neue",
-  subsets: ["latin"],
-  display: "swap",
+  weight: '400',
+  variable: '--font-bebas-neue',
+  subsets: ['latin'],
+  display: 'swap',
 });
 
 export const metadata: Metadata = {
-  title: "Vivek Kamani — Solo Video Editor",
+  title: 'Vivek Kamani — Solo Video Editor',
   description:
-    "I edit videos that capture attention. Sharp cuts, measurable results. Portfolio of Vivek Kamani.",
-  metadataBase: new URL("https://vivekkamani.com"),
+    'I edit videos that capture attention. Sharp cuts, measurable results. Portfolio of Vivek Kamani.',
+  metadataBase: new URL('https://vivekkamani.com'),
   openGraph: {
-    title: "Vivek Kamani — Solo Video Editor",
-    description: "I edit videos that capture attention.",
-    type: "website",
+    title: 'Vivek Kamani — Solo Video Editor',
+    description: 'I edit videos that capture attention.',
+    type: 'website',
   },
 };
 

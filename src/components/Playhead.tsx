@@ -1,8 +1,9 @@
-"use client";
+'use client';
 
-import { useRef } from "react";
-import { gsap, ScrollTrigger, useGSAP } from "@/lib/gsap";
-import { useMotion } from "@/providers/MotionProvider";
+import { useRef } from 'react';
+
+import { gsap, useGSAP } from '@/lib/gsap';
+import { useMotion } from '@/providers/MotionProvider';
 
 /**
  * Vertical playhead line that scrubs down the page, connecting all sections
@@ -18,17 +19,17 @@ export default function Playhead() {
 
       gsap.from(lineRef.current, {
         scaleY: 0,
-        transformOrigin: "top",
-        ease: "none",
+        transformOrigin: 'top',
+        ease: 'none',
         scrollTrigger: {
           trigger: document.documentElement,
-          start: "top top",
-          end: "bottom bottom",
+          start: 'top top',
+          end: 'bottom bottom',
           scrub: 0.5,
         },
       });
     },
-    { dependencies: [reducedMotion] },
+    { dependencies: [reducedMotion] }
   );
 
   if (reducedMotion) return null;
@@ -36,10 +37,10 @@ export default function Playhead() {
   return (
     <div
       ref={lineRef}
-      className="pointer-events-none fixed top-0 left-4 z-40 hidden h-screen w-px bg-danube/40 md:block"
+      className="bg-danube/40 pointer-events-none fixed top-0 left-4 z-40 hidden h-screen w-px md:block"
       aria-hidden="true"
     >
-      <div className="absolute bottom-0 left-1/2 h-4 w-4 -translate-x-1/2 rounded-full border-2 border-danube bg-ink" />
+      <div className="border-danube bg-ink absolute bottom-0 left-1/2 h-4 w-4 -translate-x-1/2 rounded-full border-2" />
     </div>
   );
 }
