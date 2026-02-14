@@ -8,11 +8,16 @@ import { useMotion } from '@/providers/MotionProvider';
 
 export function SmoothScrollProvider({ children }: { children: ReactNode }) {
   const lenisRef = useRef<Lenis | null>(null);
+  const rafRef = useRef<number | null>(null);
   const { reducedMotion } = useMotion();
 
   useEffect(() => {
     if (reducedMotion) {
       // Destroy Lenis if motion is reduced
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
       lenisRef.current?.destroy();
       lenisRef.current = null;
       ScrollTrigger.refresh();
@@ -33,9 +38,9 @@ export function SmoothScrollProvider({ children }: { children: ReactNode }) {
 
     const raf = (time: number) => {
       lenis.raf(time);
-      requestAnimationFrame(raf);
+      rafRef.current = requestAnimationFrame(raf);
     };
-    const rafId = requestAnimationFrame(raf);
+    rafRef.current = requestAnimationFrame(raf);
 
     // Tell ScrollTrigger to use Lenis's scroller proxy
     ScrollTrigger.scrollerProxy(document.documentElement, {
@@ -59,7 +64,10 @@ export function SmoothScrollProvider({ children }: { children: ReactNode }) {
     ScrollTrigger.refresh();
 
     return () => {
-      cancelAnimationFrame(rafId);
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
       lenis.destroy();
       lenisRef.current = null;
     };
