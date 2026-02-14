@@ -2,6 +2,7 @@
 
 import ContactFooter from '@/components/ContactFooter';
 import CustomCursor from '@/components/CustomCursor';
+import Gallery from '@/components/Gallery';
 import Hero from '@/components/Hero';
 import Metrics from '@/components/Metrics';
 import Navbar from '@/components/Navbar';
@@ -20,6 +21,7 @@ export default function Home() {
         <main id="main-content" role="main">
           <Hero />
           <Metrics />
+          <Gallery />
           <ProjectShowcase />
           <ContactFooter />
         </main>
