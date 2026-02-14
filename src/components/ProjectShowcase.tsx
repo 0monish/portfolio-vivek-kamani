@@ -59,42 +59,96 @@ export default function ProjectShowcase() {
     () => {
       if (reducedMotion || !sectionRef.current) return;
 
+      const blendLayer = sectionRef.current.querySelector(
+        '[data-work-blend]'
+      ) as HTMLDivElement | null;
       const cards = sectionRef.current.querySelectorAll('[data-project-card]');
 
-      // "Film strip" hard-cut reveal
-      cards.forEach((card) => {
-        // Clip-based reveal: card slides in like a film advancing
-        gsap.from(card, {
+      // Initial state setup
+      gsap.set(sectionRef.current, {
+        y: 24,
+        opacity: 1, // ✨ Changed from 0.9 to 1 (no fading)
+      });
+
+      if (blendLayer) {
+        gsap.set(blendLayer, {
+          opacity: 0, // ✨ Start invisible so it doesn't show
+        });
+      }
+
+      // Boundary animation: section entrance (no fading)
+      const boundaryTimeline = gsap.timeline({
+        scrollTrigger: {
+          trigger: sectionRef.current,
+          start: 'top bottom',
+          end: 'top top',
+          scrub: true, // ✨ Changed from scrub: 1 to immediate sync
+        },
+      });
+
+      boundaryTimeline.to(
+        sectionRef.current,
+        {
+          y: 0,
+          opacity: 1, // ✨ Just move into place, no fading
+          ease: 'none',
+        },
+        0
+      );
+
+      // Blend layer stays invisible (removed fade animation)
+      // if (blendLayer) {
+      //   boundaryTimeline.to(
+      //     blendLayer,
+      //     {
+      //       opacity: 0,
+      //       ease: 'none',
+      //     },
+      //     0
+      //   );
+      // }
+
+      // Project card animations: unified timeline with stagger
+      const cardsTimeline = gsap.timeline({
+        scrollTrigger: {
+          trigger: sectionRef.current,
+          start: 'top 80%',
+          end: 'bottom 20%',
+          scrub: true, // ✨ Changed from scrub: 1 to immediate sync
+          toggleActions: 'play none none reverse',
+        },
+      });
+
+      // Film strip reveal: all cards animate with unified clip-path
+      cardsTimeline.from(
+        cards,
+        {
           clipPath: 'inset(0% 0% 100% 0%)',
           duration: 0.7,
           ease: 'power4.out',
-          scrollTrigger: {
-            trigger: card,
-            start: 'top 88%',
-            end: 'top 40%',
-            toggleActions: 'play none none reverse',
-          },
-        });
+          stagger: 0.12, // Coordinated stagger
+        },
+        0
+      );
 
-        // Inner content stagger
+      // Inner content stagger: parallel animation for card content
+      cards.forEach((card, i) => {
         const inner = card.querySelector('[data-project-inner]');
         if (inner) {
-          gsap.from(inner, {
-            y: 40,
-            opacity: 0,
-            duration: 0.5,
-            ease: 'power3.out',
-            scrollTrigger: {
-              trigger: card,
-              start: 'top 75%',
-              toggleActions: 'play none none reverse',
+          cardsTimeline.from(
+            inner,
+            {
+              y: 40,
+              opacity: 0,
+              duration: 0.5,
+              ease: 'power3.out',
             },
-            delay: 0.2,
-          });
+            i * 0.12 + 0.1 // Stagger + offset after clip starts
+          );
         }
       });
 
-      // Playhead line animation
+      // Playhead line animation (independent element)
       const playhead = sectionRef.current.querySelector('[data-playhead]');
       if (playhead) {
         gsap.from(playhead, {
@@ -104,7 +158,7 @@ export default function ProjectShowcase() {
             trigger: sectionRef.current,
             start: 'top 80%',
             end: 'bottom 20%',
-            scrub: 1,
+            scrub: true, // ✨ Changed from scrub: 1 to immediate sync
           },
         });
       }
@@ -117,8 +171,14 @@ export default function ProjectShowcase() {
       ref={sectionRef}
       id="work"
       aria-label="Selected projects and work"
-      className="bg-ink relative py-32 md:py-40"
+      className="bg-ink relative -mt-px overflow-hidden py-32 md:py-40"
     >
+      <div
+        data-work-blend
+        className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-[linear-gradient(180deg,#faedd9_0%,rgba(250,237,217,0)_100%)]"
+        aria-hidden="true"
+      />
+
       {/* Section heading */}
       <div className="mx-auto mb-20 max-w-6xl px-6">
         <h2 className="font-display text-citrine text-5xl font-black tracking-tight uppercase sm:text-6xl md:text-7xl">

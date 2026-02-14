@@ -10,51 +10,76 @@ export default function CustomCursor() {
   const textRef = useRef<HTMLSpanElement>(null);
   const { reducedMotion } = useMotion();
   const [isHoveringVideo, setIsHoveringVideo] = useState(false);
-  const [hasFinePointer] = useState(
-    () =>
-      typeof window !== 'undefined' &&
-      window.matchMedia('(pointer: fine)').matches
-  );
+  const [hasFinePointer, setHasFinePointer] = useState(false);
 
+  // Debounced mouse position
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const mouseTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+
+  // Detect fine pointer support
   useEffect(() => {
-    if (reducedMotion || !hasFinePointer) return;
+    const mediaQuery = window.matchMedia('(pointer: fine)');
+    const updatePointerState = (event?: MediaQueryListEvent) => {
+      setHasFinePointer(event?.matches ?? mediaQuery.matches);
+    };
+
+    updatePointerState();
+    mediaQuery.addEventListener('change', updatePointerState);
+
+    return () => mediaQuery.removeEventListener('change', updatePointerState);
+  }, []);
+
+  // Debounced mouse movement handler (not GSAP)
+  useEffect(() => {
+    if (reducedMotion || !hasFinePointer || !cursorRef.current) return;
 
     const onMouseMove = (e: MouseEvent) => {
-      if (cursorRef.current) {
-        gsap.to(cursorRef.current, {
-          x: e.clientX,
-          y: e.clientY,
-          duration: 0.15,
-          ease: 'power2.out',
-        });
+      setMousePos({ x: e.clientX, y: e.clientY });
+
+      // Clear previous timeout to batch updates
+      if (mouseTimeoutRef.current) {
+        clearTimeout(mouseTimeoutRef.current);
       }
     };
+
+    window.addEventListener('mousemove', onMouseMove, { passive: true });
+
+    return () => {
+      window.removeEventListener('mousemove', onMouseMove);
+      if (mouseTimeoutRef.current) clearTimeout(mouseTimeoutRef.current);
+    };
+  }, [hasFinePointer, reducedMotion]);
+
+  // Video hover state with mutation observer
+  useEffect(() => {
+    if (reducedMotion || !hasFinePointer) return;
 
     const onMouseEnterVideo = () => setIsHoveringVideo(true);
     const onMouseLeaveVideo = () => setIsHoveringVideo(false);
 
-    document.addEventListener('mousemove', onMouseMove);
-
-    // Observe for [data-video-hover] elements
-    const observer = new MutationObserver(() => {
-      const videoElements = document.querySelectorAll('[data-video-hover]');
-      videoElements.forEach((el) => {
+    const bindVideoListeners = () => {
+      const elements = document.querySelectorAll('[data-video-hover]');
+      elements.forEach((el) => {
+        el.removeEventListener('mouseenter', onMouseEnterVideo);
+        el.removeEventListener('mouseleave', onMouseLeaveVideo);
         el.addEventListener('mouseenter', onMouseEnterVideo);
         el.addEventListener('mouseleave', onMouseLeaveVideo);
       });
+
+      return elements;
+    };
+
+    // Observe for [data-video-hover] elements
+    const observer = new MutationObserver(() => {
+      bindVideoListeners();
     });
 
     observer.observe(document.body, { childList: true, subtree: true });
 
     // Initial bind
-    const videoElements = document.querySelectorAll('[data-video-hover]');
-    videoElements.forEach((el) => {
-      el.addEventListener('mouseenter', onMouseEnterVideo);
-      el.addEventListener('mouseleave', onMouseLeaveVideo);
-    });
+    const videoElements = bindVideoListeners();
 
     return () => {
-      document.removeEventListener('mousemove', onMouseMove);
       observer.disconnect();
       videoElements.forEach((el) => {
         el.removeEventListener('mouseenter', onMouseEnterVideo);
@@ -63,25 +88,36 @@ export default function CustomCursor() {
     };
   }, [hasFinePointer, reducedMotion]);
 
-  useGSAP(() => {
-    if (!cursorRef.current || reducedMotion) return;
+  // Consolidated GSAP animations: position tracking + size toggling
+  useGSAP(
+    () => {
+      if (!cursorRef.current || reducedMotion || !hasFinePointer) return;
 
-    if (isHoveringVideo) {
-      gsap.to(cursorRef.current, {
-        width: 80,
-        height: 80,
-        duration: 0.3,
-        ease: 'power2.out',
-      });
-    } else {
-      gsap.to(cursorRef.current, {
-        width: 12,
-        height: 12,
-        duration: 0.3,
-        ease: 'power2.out',
-      });
-    }
-  }, [isHoveringVideo, reducedMotion]);
+      // Use gsap.context() for proper cleanup
+      const ctx = gsap.context(() => {
+        // Single tween for cursor position (kills previous on update)
+        gsap.to(cursorRef.current, {
+          x: mousePos.x,
+          y: mousePos.y,
+          duration: 0.15,
+          ease: 'power2.out',
+          overwrite: 'auto', // Prevents tween buildup
+        });
+
+        // Single tween for cursor size based on hover state
+        gsap.to(cursorRef.current, {
+          width: isHoveringVideo ? 80 : 12,
+          height: isHoveringVideo ? 80 : 12,
+          duration: 0.3,
+          ease: 'power2.out',
+          overwrite: 'auto',
+        });
+      }, cursorRef);
+
+      return () => ctx.revert();
+    },
+    { dependencies: [mousePos, isHoveringVideo, reducedMotion, hasFinePointer] }
+  );
 
   if (reducedMotion || !hasFinePointer) return null;
 

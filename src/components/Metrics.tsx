@@ -2,6 +2,7 @@
 
 import { useRef } from 'react';
 
+import StoryBridge from '@/components/StoryBridge';
 import { gsap, useGSAP } from '@/lib/gsap';
 import { useMotion } from '@/providers/MotionProvider';
 
@@ -26,45 +27,54 @@ export default function Metrics() {
       if (reducedMotion || !sectionRef.current) return;
 
       const cards = sectionRef.current.querySelectorAll('[data-metric]');
+      const numbers = sectionRef.current.querySelectorAll('[data-count]');
 
-      // Hard-cut entrance: each card clips in from the bottom
-      cards.forEach((card, i) => {
-        gsap.from(card, {
+      // Single unified timeline for all metrics animations
+      // This ensures coordinated entrance and proper staggering
+      const metricsTimeline = gsap.timeline({
+        scrollTrigger: {
+          trigger: sectionRef.current,
+          start: 'top 75%',
+          end: 'top 25%',
+          scrub: true, // ✨ Changed from scrub: 1 to immediate sync
+          toggleActions: 'play none none reverse',
+        },
+      });
+
+      // Animate all cards with clip-path reveal + stagger
+      metricsTimeline.from(
+        cards,
+        {
           clipPath: 'inset(100% 0% 0% 0%)',
           duration: 0.6,
           ease: 'power4.out',
-          scrollTrigger: {
-            trigger: card,
-            start: 'top 85%',
-            end: 'top 50%',
-            toggleActions: 'play none none reverse',
-          },
-          delay: i * 0.1,
-        });
-      });
+          stagger: 0.1, // Consolidated stagger in timeline
+        },
+        0
+      );
 
-      // Animate numbers counting up
-      const numbers = sectionRef.current.querySelectorAll('[data-count]');
-      numbers.forEach((el) => {
+      // Parallel: animate numbers counting up at same time
+      // Use object tweens for each number to avoid multiple scroll listeners
+      numbers.forEach((el, i) => {
         const target = parseFloat(el.getAttribute('data-count') || '0');
         const isFloat = target % 1 !== 0;
         const obj = { val: 0 };
 
-        gsap.to(obj, {
-          val: target,
-          duration: 2,
-          ease: 'power2.out',
-          scrollTrigger: {
-            trigger: el,
-            start: 'top 80%',
-            toggleActions: 'play none none none',
+        // Add to same timeline to keep everything synchronized
+        metricsTimeline.to(
+          obj,
+          {
+            val: target,
+            duration: 0.8,
+            ease: 'power2.out',
+            onUpdate: () => {
+              (el as HTMLElement).textContent = isFloat
+                ? obj.val.toFixed(1)
+                : Math.floor(obj.val).toString();
+            },
           },
-          onUpdate: () => {
-            (el as HTMLElement).textContent = isFloat
-              ? obj.val.toFixed(1)
-              : Math.floor(obj.val).toString();
-          },
-        });
+          i * 0.08 // Stagger matches card stagger
+        );
       });
     },
     { scope: sectionRef, dependencies: [reducedMotion] }
@@ -76,6 +86,9 @@ export default function Metrics() {
       id="metrics"
       aria-label="Key metrics and statistics"
       className="bg-citrine relative py-32 md:py-40"
+      style={{
+        marginTop: 0,
+      }}
     >
       {/* Playhead connector line */}
       <div
@@ -83,7 +96,7 @@ export default function Metrics() {
         aria-hidden="true"
       />
 
-      <div className="mx-auto max-w-6xl px-6">
+      <div className="mx-auto max-w-6xl px-6" data-metrics-inner>
         <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
           {METRICS.map((metric) => (
             <div
@@ -110,6 +123,8 @@ export default function Metrics() {
           ))}
         </div>
       </div>
+
+      <StoryBridge />
     </section>
   );
 }
