@@ -98,7 +98,7 @@ export type SpiralGalleryProps = {
 };
 
 const DEFAULT_SECTION_CLASSNAME =
-  'relative h-[150svh] w-full overflow-hidden bg-black p-8 text-justify text-[#d2d2d2] max-[1000px]:h-[125svh]';
+  'relative isolate z-[40] h-[150svh] w-full overflow-hidden bg-black p-8 text-justify text-[#d2d2d2] max-[1000px]:h-[125svh]';
 
 const DEFAULT_TITLE_CLASSNAME =
   'relative text-[clamp(3.5rem,10vw,15rem)] font-bold uppercase leading-[0.8] tracking-[-0.1rem] text-white';

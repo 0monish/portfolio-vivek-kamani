@@ -3,8 +3,7 @@
 import ContactFooter from '@/components/ContactFooter';
 import CustomCursor from '@/components/CustomCursor';
 import Gallery from '@/components/Gallery';
-import Hero from '@/components/Hero';
-import Metrics from '@/components/Metrics';
+import Hero from '@/components/Hero/index';
 import Navbar from '@/components/Navbar';
 import Playhead from '@/components/Playhead';
 import ProjectShowcase from '@/components/ProjectShowcase';
@@ -20,7 +19,6 @@ export default function Home() {
         <Playhead />
         <main id="main-content" role="main">
           <Hero />
-          <Metrics />
           <Gallery />
           <ProjectShowcase />
           <ContactFooter />

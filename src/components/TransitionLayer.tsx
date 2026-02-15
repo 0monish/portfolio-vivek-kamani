@@ -7,10 +7,10 @@ import { gsap, useGSAP } from '@/lib/gsap';
 /**
  * TransitionLayer Component
  *
- * Visual bridge between Hero zoom and Metrics reveal
+ * Visual bridge for Hero zoom
  * - Radial bloom effect that builds during phone zoom
  * - Creates seamless visual continuity
- * - Fades out as metrics take over
+ * - Fades out afterwards
  */
 export default function TransitionLayer() {
   const layerRef = useRef<HTMLDivElement>(null);
@@ -48,7 +48,7 @@ export default function TransitionLayer() {
         0.4
       );
 
-      // Fade out after metrics visible (0.80 - 1.00)
+      // Fade out afterwards (0.80 - 1.00)
       transitionTimeline.to(
         layerRef.current,
         {

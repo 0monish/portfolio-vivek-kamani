@@ -43,7 +43,6 @@ export default function Navbar() {
         <ul className="hidden items-center gap-8 md:flex" role="list">
           {[
             { label: 'Work', href: '#work' },
-            { label: 'About', href: '#metrics' },
             { label: 'Contact', href: '#contact' },
           ].map((link) => (
             <li key={link.href}>

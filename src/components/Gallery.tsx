@@ -14,7 +14,7 @@ export default function Gallery() {
       imageUrls={galleryImages}
       imageHeightPreset="lg"
       ariaLabel="Visual stories gallery - explore artistic photography"
-      className="bg-black"
+      className="-mt-[30vh] bg-black"
       titleClassName="mb-12 px-8"
       overlayContentZIndex={10}
       enableMouseParallax
