@@ -131,9 +131,39 @@ export function useHeroAnimations(refs: HeroAnimationRefs) {
           });
         }
 
-        // NOTE: Headline and subtext entrance animations REMOVED
-        // They conflicted with scroll-triggered fadeout animations.
-        // Headlines now start visible and only animate on scroll.
+        let headlineIntroTimeline: gsap.core.Timeline | null = null;
+        let ctaIntroTween: gsap.core.Tween | null = null;
+        let bottomTextIntroTween: gsap.core.Tween | null = null;
+
+        if (
+          leftHeadlineRef.current &&
+          rightHeadlineRef.current &&
+          subtextRef.current
+        ) {
+          // Restore edge-based intro: left and right headlines slide in from opposite sides.
+          headlineIntroTimeline = gsap
+            .timeline({
+              delay: 0.16,
+              defaults: {
+                opacity: 0,
+                duration: 1.2,
+                ease: 'power4.out',
+                overwrite: 'auto',
+              },
+            })
+            .from(leftHeadlineRef.current, { xPercent: -135 }, 0)
+            .from(rightHeadlineRef.current, { xPercent: 135 }, 0.14)
+            .from(
+              subtextRef.current,
+              {
+                xPercent: -55,
+                y: 10,
+                duration: 0.95,
+                ease: 'power3.out',
+              },
+              0.5
+            );
+        }
 
         if (phoneBodyRef.current) {
           gsap.from(phoneBodyRef.current, {
@@ -150,7 +180,7 @@ export function useHeroAnimations(refs: HeroAnimationRefs) {
         }
 
         if (ctaRef.current) {
-          gsap.from(ctaRef.current, {
+          ctaIntroTween = gsap.from(ctaRef.current, {
             opacity: 0,
             y: 20,
             duration: 0.8,
@@ -160,7 +190,7 @@ export function useHeroAnimations(refs: HeroAnimationRefs) {
         }
 
         if (bottomTextRef.current) {
-          gsap.from(bottomTextRef.current, {
+          bottomTextIntroTween = gsap.from(bottomTextRef.current, {
             opacity: 0,
             x: 20,
             duration: 0.8,
@@ -193,26 +223,44 @@ export function useHeroAnimations(refs: HeroAnimationRefs) {
             peakOpacity: 0.65,
           } as const;
 
-          // CRITICAL: Kill any entrance animations and clear their inline styles
-          // before scroll timeline takes control
-          const heroIntroElements = [
+          const headlineIntroElements = [
             leftHeadlineRef.current,
             rightHeadlineRef.current,
             subtextRef.current,
+          ].filter(Boolean);
+
+          const ctaIntroElements = [
             ctaRef.current,
             bottomTextRef.current,
           ].filter(Boolean);
 
-          gsap.killTweensOf(heroIntroElements);
-          // Force clear inline styles set by entrance animations
-          gsap.set(heroIntroElements, { clearProps: 'all' });
-          // Set explicit starting state for scroll animations
-          gsap.set(heroIntroElements, {
-            opacity: 1,
-            yPercent: 0,
-            scale: 1,
-            y: 0,
-          });
+          let introSyncedToScroll = false;
+          const syncIntroStateForScroll = () => {
+            if (introSyncedToScroll) return;
+            introSyncedToScroll = true;
+
+            // Scroll timeline owns animation after the first real scroll movement.
+            headlineIntroTimeline?.kill();
+            ctaIntroTween?.kill();
+            bottomTextIntroTween?.kill();
+
+            // Keep headline visibility governed by the scroll timeline; only normalize offsets.
+            gsap.set(headlineIntroElements, {
+              x: 0,
+              xPercent: 0,
+              y: 0,
+            });
+
+            // CTA and bottom indicator need a full baseline reset to avoid partial frozen states.
+            gsap.set(ctaIntroElements, {
+              opacity: 1,
+              x: 0,
+              xPercent: 0,
+              y: 0,
+              yPercent: 0,
+              scale: 1,
+            });
+          };
 
           const heroTimeline = gsap.timeline({
             scrollTrigger: {
@@ -221,12 +269,16 @@ export function useHeroAnimations(refs: HeroAnimationRefs) {
               end: 'bottom 20%',
               scrub: true,
               invalidateOnRefresh: true,
+              onUpdate: (self) => {
+                if (self.progress > 0.01) {
+                  syncIntroStateForScroll();
+                }
+              },
             },
           });
 
           // PHASE 1: Hero intro elements fade out VERY FAST (0.00 - 0.08)
           // Must complete WELL BEFORE kinetic text appears at 28%
-          // Initial state already set by gsap.set() above
           heroTimeline
             .to(
               [leftHeadlineRef.current, rightHeadlineRef.current],

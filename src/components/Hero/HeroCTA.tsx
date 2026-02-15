@@ -5,7 +5,7 @@ const HeroCTA = forwardRef<HTMLAnchorElement>(function HeroCTA(_props, ref) {
     <a
       ref={ref}
       href="#contact"
-      className="bg-citrine text-ink absolute bottom-12 left-1/2 z-40 flex -translate-x-1/2 transform items-center gap-3 rounded-full px-8 py-3 text-sm font-bold tracking-widest uppercase transition-all hover:scale-105 hover:bg-white sm:bottom-16 md:bottom-20"
+      className="bg-citrine text-ink absolute right-0 bottom-12 left-0 z-40 mx-auto flex w-max items-center gap-3 rounded-full px-8 py-3 text-sm font-bold tracking-widest uppercase transition-all hover:scale-105 hover:bg-white sm:bottom-16 md:bottom-20"
     >
       Start Your Project
       <svg
